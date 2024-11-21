@@ -14,15 +14,15 @@ type Difficulty = typeof DIFFICULTIES[number];
 type WorkoutStyle = typeof WORKOUT_STYLES[number];
 
 // Type guards
-function isValidWorkoutType(type: string): type is WorkoutType {
+function isValidWorkoutType(type: string): boolean {
   return WORKOUT_TYPES.includes(type as WorkoutType);
 }
 
-function isValidDifficulty(difficulty: string): type is Difficulty {
+function isValidDifficulty(difficulty: string): boolean {
   return DIFFICULTIES.includes(difficulty as Difficulty);
 }
 
-function isValidWorkoutStyle(style: string): type is WorkoutStyle {
+function isValidWorkoutStyle(style: string): boolean {
   return WORKOUT_STYLES.includes(style as WorkoutStyle);
 }
 

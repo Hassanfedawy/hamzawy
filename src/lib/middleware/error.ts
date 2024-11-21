@@ -1,9 +1,17 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { NextHandler } from 'next-connect';
 
+interface ValidationError {
+  message: string;
+  kind: string;
+  path: string;
+  value: any;
+}
+
 export interface ApiError extends Error {
   statusCode?: number;
-  errors?: { [key: string]: string[] };
+  errors?: { [key: string]: ValidationError };
+  code?: number;
 }
 
 export function errorHandler(
@@ -17,8 +25,10 @@ export function errorHandler(
   // Mongoose validation error
   if (err.name === 'ValidationError') {
     const errors: { [key: string]: string[] } = {};
-    Object.keys(err.errors || {}).forEach((key) => {
-      errors[key] = [(err.errors || {})[key].message];
+    Object.entries(err.errors || {}).forEach(([key, error]) => {
+      if (error && typeof error === 'object' && 'message' in error) {
+        errors[key] = [error.message as string];
+      }
     });
     return res.status(400).json({
       error: 'Validation Error',
@@ -27,7 +37,7 @@ export function errorHandler(
   }
 
   // MongoDB duplicate key error
-  if (err.name === 'MongoServerError' && (err as any).code === 11000) {
+  if (err.name === 'MongoServerError' && err.code === 11000) {
     return res.status(400).json({
       error: 'Duplicate Error',
       message: 'A record with this information already exists',

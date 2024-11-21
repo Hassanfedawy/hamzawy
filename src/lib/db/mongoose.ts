@@ -1,10 +1,12 @@
 import mongoose from 'mongoose';
 
+interface GlobalMongoose {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
+
 declare global {
-  var mongoose: {
-    conn: typeof mongoose | null;
-    promise: Promise<typeof mongoose> | null;
-  };
+  var mongoose: GlobalMongoose;
 }
 
 if (!global.mongoose) {
@@ -31,14 +33,12 @@ export async function connectDB() {
       bufferCommands: true,
     };
 
-    global.mongoose.promise = mongoose.connect(process.env.MONGODB_URI, opts).then((mongoose) => {
-      console.log('New MongoDB connection established');
-      return mongoose;
-    });
+    global.mongoose.promise = mongoose.connect(process.env.MONGODB_URI, opts);
   }
 
   try {
     global.mongoose.conn = await global.mongoose.promise;
+    console.log('New MongoDB connection established');
   } catch (error) {
     global.mongoose.promise = null;
     throw error;
@@ -52,6 +52,6 @@ process.on('SIGTERM', async () => {
   if (global.mongoose.conn) {
     await global.mongoose.conn.disconnect();
     console.log('MongoDB connection closed');
-    process.exit(0);
   }
+  process.exit(0);
 });

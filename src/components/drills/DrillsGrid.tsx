@@ -5,6 +5,7 @@ import { DrillCard } from './DrillCard';
 import { Button } from '@/components/ui/Button';
 import { useDrillContext, useDrillActions } from '@/context/DrillContext';
 import { drillsApi } from '@/lib/api';
+import { Drill } from '@/lib/types';
 
 const CATEGORIES = [
   'All',
@@ -15,28 +16,41 @@ const CATEGORIES = [
   'Plyometrics',
 ] as const;
 
-export function DrillsGrid() {
+interface DrillsGridProps {
+  drills?: Drill[];
+}
+
+export function DrillsGrid({ drills: initialDrills }: DrillsGridProps) {
   const { state } = useDrillContext();
   const { setCategory, setDrills, setLoading, setError } = useDrillActions();
 
-  // Fetch drills from API
+  // Set initial drills if provided
   useEffect(() => {
-    const fetchDrills = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const drills = await drillsApi.fetchDrills(state.selectedCategory);
-        setDrills(drills);
-      } catch (error) {
-        setError(error instanceof Error ? error.message : 'Failed to fetch drills');
-        console.error('Error fetching drills:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (initialDrills) {
+      setDrills(initialDrills);
+    }
+  }, [initialDrills, setDrills]);
 
-    fetchDrills();
-  }, [state.selectedCategory, setDrills, setLoading, setError]);
+  // Fetch drills from API if no initial drills provided
+  useEffect(() => {
+    if (!initialDrills) {
+      const fetchDrills = async () => {
+        try {
+          setLoading(true);
+          setError(null);
+          const drills = await drillsApi.fetchDrills(state.selectedCategory);
+          setDrills(drills);
+        } catch (error) {
+          setError(error instanceof Error ? error.message : 'Failed to fetch drills');
+          console.error('Error fetching drills:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchDrills();
+    }
+  }, [state.selectedCategory, setDrills, setLoading, setError, initialDrills]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
